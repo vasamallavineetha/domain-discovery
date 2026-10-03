@@ -16,6 +16,7 @@ Usage:
 """
 
 import argparse
+import base64
 import csv
 import datetime
 import gzip
@@ -219,11 +220,13 @@ def extract_base_domain(fqdn: str) -> str:
 def fetch_whoisds(target_date: datetime.date) -> list[DomainRecord]:
     """Download the daily NRD list from WhoisDS.
 
-    URL pattern: https://whoisds.com/whois-database/newly-registered-domains/<date>.zip/nrd
+    URL pattern: https://whoisds.com/whois-database/newly-registered-domains/<base64_date>/nrd
     The ZIP contains a text file with one domain per line.
     """
     date_str = target_date.strftime("%Y-%m-%d")
-    url = f"https://whoisds.com/whois-database/newly-registered-domains/{date_str}.zip/nrd"
+    zip_filename = f"{date_str}.zip"
+    b64_filename = base64.b64encode(zip_filename.encode()).decode()
+    url = f"https://whoisds.com/whois-database/newly-registered-domains/{b64_filename}/nrd"
 
     logger.info(f"[WhoisDS] Fetching NRD list for {date_str} …")
     records: list[DomainRecord] = []
