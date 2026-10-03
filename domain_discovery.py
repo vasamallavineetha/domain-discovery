@@ -18,17 +18,12 @@ Usage:
 import argparse
 import csv
 import datetime
-import email.encoders
-import email.mime.base
-import email.mime.multipart
-import email.mime.text
 import gzip
 import io
 import json
 import logging
 import os
 import re
-import smtplib
 import sys
 import time
 import zipfile
@@ -682,18 +677,13 @@ def export_results(records: list[DomainRecord], target_date: datetime.date,
 
 def send_email(subject: str, body: str, attachments: list[Path],
                recipient: str | None = None) -> bool:
-    """Send an email with file attachments via Gmail SMTP.
+    """Send an email with file attachments via Gmail SMTP."""
+    import email.encoders
+    import email.mime.base
+    import email.mime.multipart
+    import email.mime.text
+    import smtplib
 
-    Credentials are read from environment variables:
-      - GMAIL_ADDRESS   : Your Gmail address (sender & default recipient)
-      - GMAIL_APP_PASS  : Gmail App Password (NOT your regular password)
-      - EMAIL_RECIPIENT : (optional) Override recipient address
-
-    To create a Gmail App Password:
-      1. Go to https://myaccount.google.com/apppasswords
-      2. Select "Mail" → "Other (Custom name)" → enter "Domain Discovery"
-      3. Copy the 16-character password
-    """
     sender = os.environ.get("GMAIL_ADDRESS", "")
     password = os.environ.get("GMAIL_APP_PASS", "")
     recipient = recipient or os.environ.get("EMAIL_RECIPIENT", sender)
