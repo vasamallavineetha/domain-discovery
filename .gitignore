@@ -1,0 +1,18 @@
+# Output files (generated daily)
+output/
+logs/
+.cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

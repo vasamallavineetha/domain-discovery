@@ -1,0 +1,69 @@
+name: 🌐 Daily Domain Discovery
+
+on:
+  # Run every day at 06:00 UTC (11:30 AM IST)
+  schedule:
+    - cron: '0 6 * * *'
+  
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: 'Target date (YYYY-MM-DD, leave empty for today)'
+        required: false
+        default: ''
+      min_domains:
+        description: 'Minimum domains to discover'
+        required: false
+        default: '500'
+
+jobs:
+  discover-domains:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 📦 Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: 🌐 Run Domain Discovery
+        env:
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASS: ${{ secrets.GMAIL_APP_PASS }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+        run: |
+          DATE_ARG=""
+          if [ -n "${{ github.event.inputs.target_date }}" ]; then
+            DATE_ARG="--date ${{ github.event.inputs.target_date }}"
+          fi
+          
+          MIN_ARG=""
+          if [ -n "${{ github.event.inputs.min_domains }}" ]; then
+            MIN_ARG="--min-domains ${{ github.event.inputs.min_domains }}"
+          fi
+          
+          python domain_discovery.py $DATE_ARG --format both --email $MIN_ARG
+
+      - name: 📤 Upload results as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: domain-reports-${{ github.run_number }}
+          path: output/
+          retention-days: 30
+
+      - name: 📤 Upload logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: discovery-logs-${{ github.run_number }}
+          path: logs/
+          retention-days: 7
